@@ -20,7 +20,7 @@ import java.util.concurrent.*
 @State(Scope.Thread)
 @Fork(1)
 open class LoomThreadPool {
-    @Param(value = ["10", "100", "1000", "10000"])
+    @Param(value = ["10", "100", "1000", "10000", "100000"])
     private var repeat: Int = 0
     // Simulating work in increasingly-heavier loads
     @Param(value = ["0", "10", "100"])
@@ -57,7 +57,7 @@ open class LoomThreadPool {
 
         @TearDown(Level.Iteration)
         fun teardown() {
-            customThreadPool.shutdown()
+            customThreadPool.close()
         }
     }
 }

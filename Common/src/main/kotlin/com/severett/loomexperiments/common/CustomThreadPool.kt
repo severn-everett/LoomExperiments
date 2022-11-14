@@ -28,7 +28,7 @@ internal class BlockingQueue<Type>(private val maxTaskAmt: Int) {
     }
 }
 
-class CustomThreadPool(queueSize: Int, nThread: Int) : Executor {
+class CustomThreadPool(queueSize: Int, nThread: Int) : Executor, AutoCloseable {
     private val queue = BlockingQueue<Runnable>(queueSize)
     private val pool: List<Thread>
 
@@ -39,12 +39,12 @@ class CustomThreadPool(queueSize: Int, nThread: Int) : Executor {
         }
     }
 
-    fun shutdown() {
-        pool.forEach { it.interrupt() }
-    }
-
     override fun execute(command: Runnable) {
         queue.enqueue(command)
+    }
+
+    override fun close() {
+        pool.forEach(Thread::interrupt)
     }
 
     fun submitTask(task: Runnable): Future<Unit> {
