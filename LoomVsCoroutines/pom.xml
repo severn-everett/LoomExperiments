@@ -37,10 +37,24 @@ THE POSSIBILITY OF SUCH DAMAGE.
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>ThreadVsLoom</artifactId>
+    <artifactId>LoomVsCoroutines</artifactId>
     <packaging>jar</packaging>
 
-    <name>Thread Vs Loom</name>
+    <name>Loom Vs Coroutines</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.severett.loomexperiments</groupId>
+            <artifactId>Common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+            <version>1.6.4</version>
+            <type>pom</type>
+        </dependency>
+    </dependencies>
 
     <properties>
         <!--
@@ -50,7 +64,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
                reflection: load classes and use Reflection over them;
           -->
         <jmh.generator>default</jmh.generator>
-        <uberjar.name>ThreadVsLoomBenchmarks</uberjar.name>
+        <uberjar.name>Loom Vs Coroutines</uberjar.name>
     </properties>
 
     <build>
@@ -181,6 +195,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 

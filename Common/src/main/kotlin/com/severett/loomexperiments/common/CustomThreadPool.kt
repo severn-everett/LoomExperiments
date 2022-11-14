@@ -1,4 +1,4 @@
-package com.severett.loomthreadpool
+package com.severett.loomexperiments.common
 
 import java.util.concurrent.*
 import java.util.concurrent.locks.*
@@ -6,7 +6,7 @@ import kotlin.concurrent.withLock
 
 private const val EMPTY = 0
 
-class BockingQueue<Type>(private val maxTaskAmt: Int) {
+internal class BlockingQueue<Type>(private val maxTaskAmt: Int) {
     private val queue = ArrayDeque<Type>()
     private val lock = ReentrantLock()
     private val condition = lock.newCondition()
@@ -28,8 +28,8 @@ class BockingQueue<Type>(private val maxTaskAmt: Int) {
     }
 }
 
-class CustomThreadPool(queueSize: Int, nThread: Int) {
-    private val queue = BockingQueue<Runnable>(queueSize)
+class CustomThreadPool(queueSize: Int, nThread: Int) : Executor {
+    private val queue = BlockingQueue<Runnable>(queueSize)
     private val pool: List<Thread>
 
     init {
@@ -43,14 +43,18 @@ class CustomThreadPool(queueSize: Int, nThread: Int) {
         pool.forEach { it.interrupt() }
     }
 
+    override fun execute(command: Runnable) {
+        queue.enqueue(command)
+    }
+
     fun submitTask(task: Runnable): Future<Unit> {
         val ft = FutureTask(task, Unit)
-        queue.enqueue(ft)
+        execute(ft)
         return ft
     }
 }
 
-class TaskExecutor(private val queue: BockingQueue<Runnable>) : Runnable {
+internal class TaskExecutor(private val queue: BlockingQueue<Runnable>) : Runnable {
     override fun run() {
         try {
             while (true) {

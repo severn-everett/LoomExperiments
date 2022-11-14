@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>LoomExperiments</artifactId>
-        <groupId>com.severett</groupId>
+        <groupId>com.severett.loomexperiments</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -23,6 +23,15 @@
         <jmh.generator>default</jmh.generator>
         <uberjar.name>LoomThreadPoolBenchmarks</uberjar.name>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.severett.loomexperiments</groupId>
+            <artifactId>Common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
