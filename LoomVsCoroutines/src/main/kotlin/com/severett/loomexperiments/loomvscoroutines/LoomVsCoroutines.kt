@@ -30,7 +30,7 @@ open class LoomVsCoroutines {
     private var delay: Long = 0
 
     @Benchmark
-    fun usingLoom(blackhole: Blackhole, threadPoolHelper: ThreadPoolHelper) {
+    fun loom(blackhole: Blackhole, threadPoolHelper: ThreadPoolHelper) {
         (0 until repeat).map { i ->
             threadPoolHelper.executorService.submit {
                 Thread.sleep(delay)
@@ -40,7 +40,7 @@ open class LoomVsCoroutines {
     }
 
     @Benchmark
-    fun usingCoroutines(blackhole: Blackhole) {
+    fun coroutines(blackhole: Blackhole) {
         runBlocking {
             (0 until repeat).map { i ->
                 launch {
@@ -52,12 +52,14 @@ open class LoomVsCoroutines {
     }
 
     @Benchmark
-    fun usingBoth(blackhole: Blackhole, threadPoolHelper: ThreadPoolHelper) {
+    fun hybrid(blackhole: Blackhole, threadPoolHelper: ThreadPoolHelper) {
         runBlocking(threadPoolHelper.executorService.asCoroutineDispatcher()) {
             (0 until repeat).map { i ->
-                delay(delay)
-                blackhole.consume(i)
-            }
+                launch {
+                    delay(delay)
+                    blackhole.consume(i)
+                }
+            }.forEach { it.join() }
         }
     }
 
