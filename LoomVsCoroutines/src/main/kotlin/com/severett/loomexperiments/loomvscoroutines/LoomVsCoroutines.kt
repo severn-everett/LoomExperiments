@@ -1,9 +1,8 @@
 package com.severett.loomexperiments.loomvscoroutines
 
-import com.severett.loomexperiments.common.CustomThreadPool
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
@@ -31,9 +30,9 @@ open class LoomVsCoroutines {
     private var delay: Long = 0
 
     @Benchmark
-    fun usingLoom(blackhole: Blackhole, loomHelper: LoomHelper) {
+    fun usingLoom(blackhole: Blackhole, threadPoolHelper: ThreadPoolHelper) {
         (0 until repeat).map { i ->
-            loomHelper.customThreadPool.submitTask {
+            threadPoolHelper.executorService.submit {
                 Thread.sleep(delay)
                 blackhole.consume(i)
             }
@@ -44,15 +43,17 @@ open class LoomVsCoroutines {
     fun usingCoroutines(blackhole: Blackhole) {
         runBlocking {
             (0 until repeat).map { i ->
-                delay(delay)
-                blackhole.consume(i)
-            }
+                launch {
+                    delay(delay)
+                    blackhole.consume(i)
+                }
+            }.forEach { it.join() }
         }
     }
 
     @Benchmark
-    fun usingBoth(blackhole: Blackhole, hybridHelper: HybridHelper) {
-        runBlocking(hybridHelper.dispatcher) {
+    fun usingBoth(blackhole: Blackhole, threadPoolHelper: ThreadPoolHelper) {
+        runBlocking(threadPoolHelper.executorService.asCoroutineDispatcher()) {
             (0 until repeat).map { i ->
                 delay(delay)
                 blackhole.consume(i)
@@ -61,34 +62,17 @@ open class LoomVsCoroutines {
     }
 
     @State(Scope.Thread)
-    open class LoomHelper {
-        lateinit var customThreadPool: CustomThreadPool
+    open class ThreadPoolHelper {
+        lateinit var executorService: ExecutorService
 
         @Setup(Level.Iteration)
         fun setup() {
-            customThreadPool = CustomThreadPool(1000, 1000)
+            executorService = Executors.newVirtualThreadPerTaskExecutor()
         }
 
         @TearDown(Level.Iteration)
         fun teardown() {
-            customThreadPool.close()
-        }
-    }
-
-    @State(Scope.Thread)
-    open class HybridHelper {
-        private lateinit var customThreadPool: CustomThreadPool
-        val dispatcher: CoroutineDispatcher
-            get() = customThreadPool.asCoroutineDispatcher()
-
-        @Setup(Level.Iteration)
-        fun setup() {
-            customThreadPool = CustomThreadPool(1000, 1000)
-        }
-
-        @TearDown(Level.Iteration)
-        fun teardown() {
-            customThreadPool.close()
+            executorService.close()
         }
     }
 }

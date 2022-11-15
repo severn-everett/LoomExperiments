@@ -1,6 +1,5 @@
 package com.severett.loomexperiments.loomvscoroutines
 
-import com.severett.loomexperiments.common.CustomThreadPool
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -9,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.*
 import java.util.concurrent.atomic.*
 import kotlin.coroutines.CoroutineContext
 
@@ -92,9 +92,9 @@ private fun runControlTest() {
 }
 
 private fun runPoolTest(title: String, block: (CoroutineContext) -> Int) {
-    CustomThreadPool(1000, 1000).use { customThreadPool ->
+    Executors.newVirtualThreadPerTaskExecutor().use { threadPool ->
         executeTest(title) {
-            block.invoke(customThreadPool.asCoroutineDispatcher())
+            block.invoke(threadPool.asCoroutineDispatcher())
         }
     }
 }
