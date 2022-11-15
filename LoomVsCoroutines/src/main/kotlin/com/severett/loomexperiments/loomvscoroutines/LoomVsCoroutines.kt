@@ -1,5 +1,6 @@
 package com.severett.loomexperiments.loomvscoroutines
 
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -28,11 +29,24 @@ open class LoomVsCoroutines {
     // Simulating work in increasingly-heavier loads
     @Param(value = ["0", "10", "100"])
     private var delay: Long = 0
+    private lateinit var executorService: ExecutorService
+    private lateinit var executorCoroutineDispatcher: ExecutorCoroutineDispatcher
+
+    @Setup(Level.Iteration)
+    fun setup() {
+        executorService = Executors.newVirtualThreadPerTaskExecutor()
+        executorCoroutineDispatcher = executorService.asCoroutineDispatcher()
+    }
+
+    @TearDown(Level.Iteration)
+    fun teardown() {
+        executorService.close()
+    }
 
     @Benchmark
-    fun loom(blackhole: Blackhole, threadPoolHelper: ThreadPoolHelper) {
+    fun loom(blackhole: Blackhole) {
         (0 until repeat).map { i ->
-            threadPoolHelper.executorService.submit {
+            executorService.submit {
                 Thread.sleep(delay)
                 blackhole.consume(i)
             }
@@ -52,29 +66,14 @@ open class LoomVsCoroutines {
     }
 
     @Benchmark
-    fun hybrid(blackhole: Blackhole, threadPoolHelper: ThreadPoolHelper) {
-        runBlocking(threadPoolHelper.executorService.asCoroutineDispatcher()) {
+    fun hybrid(blackhole: Blackhole) {
+        runBlocking(executorCoroutineDispatcher) {
             (0 until repeat).map { i ->
                 launch {
                     delay(delay)
                     blackhole.consume(i)
                 }
             }.forEach { it.join() }
-        }
-    }
-
-    @State(Scope.Thread)
-    open class ThreadPoolHelper {
-        lateinit var executorService: ExecutorService
-
-        @Setup(Level.Iteration)
-        fun setup() {
-            executorService = Executors.newVirtualThreadPerTaskExecutor()
-        }
-
-        @TearDown(Level.Iteration)
-        fun teardown() {
-            executorService.close()
         }
     }
 }
