@@ -1,5 +1,7 @@
 package com.severett.loomexperiments.loomvscoroutines
 
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -16,6 +18,8 @@ private const val ROUNDS = 5
 private const val REPETITIONS = 10000
 private const val DELAY_AMT = 10L
 
+@DelicateCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 fun main() {
     runControlTest()
 
